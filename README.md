@@ -1,5 +1,5 @@
 # Manipulate-with-turtlesim-package-in-ROS-noetic-and-ROS-foxy
-
+## ROS 1
 ### Ros noetic : The turtlesim package in ROS Noetic is a simple simulator designed to help users learn ROS (Robot Operating System) concepts. It provides a graphical interface with a turtle that can be moved around using ROS commands, topics, and services. This package is excellent for beginners to get hands-on experience with ROS without needing physical hardware.
 
 ## 1- Install Turtlesim : If you haven't installed turtlesim, you can do so with the following command:
@@ -106,3 +106,117 @@ chmod +x move_turtle.py
 rosrun my_turtle_control move_turtle.py
 
 ```
+
+## ROS 2 
+### ROS foxy : Turtlesim is a ROS2 package used for learning and demonstrating basic robotics concepts. It provides a simple, graphical interface where users can control a turtle in a 2D space, allowing them to understand topics like publishing and subscribing to topics, and working with ROS2 nodes.
+
+## 1- Using Turtlesim
+
+Source the ROS2 setup script:
+```
+source /opt/ros/foxy/setup.bash
+```
+
+Launch Turtlesim Node:
+```
+ros2 run turtlesim turtlesim_node
+```
+
+## 2-Using Teleop
+```
+source /opt/ros/foxy/setup.bash
+ros2 run turtlesim turtle_teleop_key
+```
+
+## 3-Publishing Messages
+
+```
+source /opt/ros/foxy/setup.bash
+ros2 topic pub /turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.8}}"
+```
+
+## 4- Writing a Simple Node to Control Turtlesim
+
+1- Create a Workspace:
+
+```
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws
+colcon build
+source install/setup.bash
+```
+
+2- Create a Package:
+
+```
+cd src
+ros2 pkg create --build-type ament_python my_turtle_controller
+```
+
+3- Create a Python Script:
+
+```
+cd my_turtle_controller/my_turtle_controller
+touch turtle_controller.py
+chmod +x turtle_controller.py
+```
+
+4-Edit the Script:
+
+```
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+import time
+
+class TurtleController(Node):
+    def __init__(self):
+        super().__init__('turtle_controller')
+        self.publisher_ = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
+        self.timer = self.create_timer(1.0, self.move_turtle)
+        self.count = 0
+
+    def move_turtle(self):
+        msg = Twist()
+        msg.linear.x = 2.0
+        msg.angular.z = 1.8
+        self.publisher_.publish(msg)
+        self.count += 1
+        if self.count > 10:
+            rclpy.shutdown()
+
+def main(args=None):
+    rclpy.init(args=args)
+    turtle_controller = TurtleController()
+    rclpy.spin(turtle_controller)
+    turtle_controller.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+5- Modify setup.py:
+
+```
+entry_points={
+    'console_scripts': [
+        'turtle_controller = my_turtle_controller.turtle_controller:main',
+    ],
+},
+```
+
+6-Build the Package:
+
+```
+cd ~/ros2_ws
+colcon build
+source install/setup.bash
+```
+7-Run the Script:
+
+```
+ros2 run my_turtle_controller turtle_controller
+
+```
+
